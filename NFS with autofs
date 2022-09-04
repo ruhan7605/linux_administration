@@ -7,7 +7,7 @@ Server Configuration (192.168.1.109):
 ------------------------------------------------------------
 # yum repolist
 Configure YUM in RHEL 7:
-https://www.youtube.com/watch?v=-N09W...
+please configure the YUM local repository at first. 
 
 # yum install -y nfs*
 
