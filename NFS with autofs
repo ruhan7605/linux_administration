@@ -1,0 +1,108 @@
+Automount (AutoFS) NFS share using autofs in Linux:
+===========================================
+Autofs is a service in Linux like operating system which automatically mounts the file system and remote shares when it is accessed. 
+Main advantage of autofs is that you don’t need to mount file system at all time, file system is only mounted when it is in demand.
+
+Server Configuration (192.168.1.109):
+------------------------------------------------------------
+# yum repolist
+Configure YUM in RHEL 7:
+https://www.youtube.com/watch?v=-N09W...
+
+# yum install -y nfs*
+
+# mkdir /public
+
+# mkdir /private
+
+# chmod 777 /public
+
+# touch /public/calpublic.txt
+
+# chmod 777 /private
+
+# touch /private/calprivate.txt
+
+# vim /etc/exports
+/public 192.168.1.110(ro,sync)
+/private 192.168.1.110(rw,sync)
+
+# exportfs -arvf
+
+# firewall-cmd --permanent --add-service=nfs
+
+# firewall-cmd --permanent --add-service=rpc-bind
+
+# firewall-cmd --permanent --add-service=mountd
+
+# firewall-cmd --reload
+
+# systemctl start nfs-server
+
+# systemctl enable nfs-server
+
+# systemctl status nfs-server
+
+# systemctl start rpcbind
+
+# systemctl enable rpcbind
+
+------------------------------------------
+Client Configuration (192.168.1.110):
+
+# yum repolist
+
+# yum install autofs -y
+
+# rpm -qi autofs
+
+# mkdir /automount
+
+# mkdir -p /automount/private
+
+# mkdir -p /automount/public
+
+# vim /etc/auto.master
+/automount /etc/automount.txt  --timeout=60
+
+# vim /etc/automount.txt
+public -ro,sync 192.168.1.109:/public
+private  -rw,sync  192.168.1.109:/private
+
+# systemctl start autofs
+
+# systemctl enable autofs
+
+# systemctl status autofs
+
+# systemctl start rpcbind
+
+# systemctl enable rpcbind
+
+----------------------------------
+Test AutoFS: 
+
+Login on Client Machine and check the mount point details, here you won't see any NFS Share.
+
+# df -hT
+
+# cd /automount/
+
+# cd private
+
+Again Check the mount point details, here you will see the private NFS Share.
+# df -hT
+
+# cd .. ; cd public
+
+Again Check the mount point details, here you will see the public NFS Share.
+# df -hT
+
+Now go inside both the directories one by one & try to create and remove some files, here you will find that only RW filesystem allows you to do that not the RO Filesystem.
+
+Now come out of NFS Shares and wait for more than one min, again \ Check the mount point details, here you won't see any NFS Share.
+Beacuse both NFS shares got unmounted automatically themself due to AutoFS Service.
+
+You are done.
+
+================
