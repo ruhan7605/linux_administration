@@ -95,7 +95,7 @@ RPM-Based Distributions :
         baseurl=file:///opt/rpms
         enabled=1
         gpgcheck=0
-        
+         
                                                     ___________________________THANK_YOU___________________________
                                                     
 __________________________WRAP UP_ 
