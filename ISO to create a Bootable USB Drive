@@ -1,0 +1,12 @@
+1. first download the iso file form authentic or official web site. 
+2. i hope your download completed properly.
+3. now open the terminal as a root user.
+4. type the following line in the Terminal.
+  
+  format,
+  # dd if=<path_of_downloaded_iso> of=<usb_device> bs=512k status=progress
+  
+  example,
+  # dd if=/root/Download/RHEL-9-0-0-BaseOS-x86_64 of=/dev/sr1 status=progress bs=1M (default 512k)
+  
+  after waiting a few minutes later your device will be ready and you can OS/re-OS by using the bootlabe USB.
