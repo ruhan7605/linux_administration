@@ -1,0 +1,119 @@
+For Linux, the most common way to distribute software is binary packages in the rpm or deb format. 
+Most packages are included in the official distribution repositories or 3rd party software repositories. 
+Nevertheless, there are some cases where you need to install just a few standalone packages.   
+You might be able to use the local package install tools, namely dpkg or rpm, however, there are cases where packages can’t be installed due to the 
+dependencies and you need to install all dependencies manually. It might take some time and isn’t always an easy process. 
+But there is a solution that can help – you can create your own local repository and deploy your packages to it.
+
+Let’s discuss how to create your local repositories to make your life easier.
+
+
+RPM-Based Distributions :
+
+  RPM-based operating systems work with rpm packages and the most common package manager for them is yum.   
+  While newer RPM-based operating systems use the dnf utility,  it maintains compatibility with yum repositories so these instructions also apply for dnf.
+
+  In order to create a yum repository you need to perform the following steps:
+    1. Install createrepo utility
+    2. Create a repository directory
+    3. Put RPM files into the repository directory
+    4. Create the repository metadata
+    5. Create the repository configuration file
+  
+      1. Install createrepo utility:
+        
+        To create a yum repository we need to install additional software called “createrepo” : 
+        
+        installation command, 
+        # yum install createrepo
+        
+      2. Create a repository directory:
+      
+        You need to create a new directory that will be the location of your yum repository and will hold the desired rpm package files. 
+        So you should decide the location of this directory and create it.
+        
+        format,
+        # mkdir <your_directory_name>
+        
+        example, 
+        as an example let’s use /opt/rpms. 
+        # mkdir /opt/rpms 
+       
+     3. Put RPM files into the repository directory:
+        
+        You should just copy or download your RPMs into the new directory (/opt/rpms). 
+     
+     4. Create the repository metadata:
+        
+        The createrepo command reads through the directory with rpm packages and creates a new directory called “repodata” in it.  
+        This directory contains the metadata information for the repository.  Every time you add additional rpm package files to your yum repository, 
+        you need to re-create the repository metadata with the “createrepo” command.
+        
+        So to create the repository you need to execute: 
+        
+        format,
+        # createrepo <path_to_your_directory_with_rpms>
+        
+        example,
+        # createrepo /opt/rpms
+        
+        If you already created the repository metadata and you are just adding new packages to it you need to update the repo:
+        
+        example,
+        # createrepo --update /opt/rpms
+        
+      5. Create the repository configuration file:
+        
+        A yum repository has its own configuration file and there are a few rules for it:
+
+          i. It must be located in /etc/yum.repos.d/ directory
+          ii. It must have the .repo extension, to be recognized by yum
+        
+        File options are:
+
+          Repository ID – One word unique repository ID (example: [myrepo])
+          Name – Human-readable name of the repository (example: name=My Repository)
+          Baseurl – URL to the repodata directory. You can use file://path if repository is located locally or ftp://link, http://link, 
+                    https://link if repository is located remotely – HTTP Authentication available http://user:password@www.
+          Enabled – Enable repository when performing updates and installs (example: enabled=1)
+          Gpgcheck – Enable/disable GPG signature checking (example: gpgcheck=1)
+          Gpgkey – URL to the GPG key (example: gpgkey=http://mirror.cisp.com/)
+          Exclude – List of the packages to exclude (example: exclude=httpd,mod_ssl)
+          Includepkgs – List of the packages to include (example: include=kernel)
+          
+        Required yum repository configuration file options are:
+          
+           * Repository ID
+           * Name
+           * Baseurl
+           * Enabled
+        example:
+        
+        # vim /etc/yum.repos.d/custom.repo
+        [customrepo]
+        name=CustomRepository
+        baseurl=file:///opt/rpms
+        enabled=1
+        gpgcheck=0
+        
+                                                    ___________________________THANK_YOU___________________________
+                                                    
+__________________________WRAP UP_ 
+
+step1: # yum install createrepo
+step2: # mkdir <your_directory_name>
+  # mkdir /opt/rpms 
+step3: You should just copy or download your RPMs into the new directory (/opt/rpms).
+step4: # createrepo <path_to_your_directory_with_rpms>
+          # createrepo /opt/rpms
+          If you already created the repository metadata and you are just adding new packages to it you need to update the repo:
+          # createrepo --update /opt/rpms
+step5: # vim /etc/yum.repos.d/custom.repo
+        [customrepo]
+        name=CustomRepository
+        baseurl=file:///opt/rpms
+        enabled=1
+        gpgcheck=0
+
+_______________________________________________________________________THE END____________________________________________________________________
+       
