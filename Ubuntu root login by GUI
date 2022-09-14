@@ -1,0 +1,22 @@
+_____________________Allow GUI root login on Ubuntu 20.04 step by step instructions______________________
+step1: 
+      $ sudo passwd
+
+step2:
+      Next, step is to edit the /etc/gdm3/custom.conf GDM configuration file to allow root login.
+     
+      $ sudo vim /etc/gdm3/custom.conf
+      
+      add the AllowRoot=true line.
+      
+      AllowRoot=true
+
+step3: 
+      Next, edit PAM authentication daemon configuration file /etc/pam.d/gdm-password and comment line which denies root access to 
+      graphical user interface. To do so edit file /etc/pam.d/gdm-password and put # in front of the line containing:
+
+          #auth   required        pam_succeed_if.so user != root quiet_success
+step4: 
+      All done. Reboot your Ubuntu system and login by root.
+_________________________________________________________________________________________________________THANK_YOU
+      
