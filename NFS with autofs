@@ -3,106 +3,143 @@ Automount (AutoFS) NFS share using autofs in Linux:
 Autofs is a service in Linux like operating system which automatically mounts the file system and remote shares when it is accessed. 
 Main advantage of autofs is that you don’t need to mount file system at all time, file system is only mounted when it is in demand.
 
-Server Configuration (192.168.1.109):
-------------------------------------------------------------
-# yum repolist
-Configure YUM in RHEL 7:
-please configure the YUM local repository at first. 
+______________________________________
+Server Configuration (192.168.122.20):
+______________________________________
+YUM repositorie: 
+  # yum repolist
+  Configure YUM in RHEL 8:
+  please configure the YUM local repository at first. 
 
-# yum install -y nfs*
+Install neccessery tools:
+  # yum install -y nfs-utils
+  # systemctl start nfs-server
+  # systemctl enable nfs-server
 
-# mkdir /public
+Share a directory or a file: 
+  # mkdir /nfs/share
+  #cd /nfs/share
+  # touch nfs.txt
 
-# mkdir /private
+Export the Share:
+  # vim /etc/exports
+    #syntax
+    #<Which_file_do_you_want_to_share_?> <you_can_define_whole_ip_block_or_specific_ip_addressess_o_fqdn>
 
-# chmod 777 /public
+    /nfs/share      192.168.122.21/24(rw,sync)
 
-# touch /public/calpublic.txt
+  # exportfs -arvf
 
-# chmod 777 /private
+Verify the Export list:
+  # showmount -e
 
-# touch /private/calprivate.txt
 
-# vim /etc/exports
-/public 192.168.1.110(ro,sync)
-/private 192.168.1.110(rw,sync)
+in aditionally, you can check here (server) by using following steps,
 
-# exportfs -arvf
+create a mount point first:
+  # mkdir /nfsrcv
 
-# firewall-cmd --permanent --add-service=nfs
+to using manually mount:
+  # mount -t nfs 192.168.122.250:/nfs/share /nfsrcv
+  # cd /nfsrcv
+  # ls
+  nfs.txt
+  # df -hT
+  # reboot
 
-# firewall-cmd --permanent --add-service=rpc-bind
+or you can using by parmanent mount:
+  # vim /etc/fstab
+  192.168.122.20:/nfs/share  /nfsrcv nfs  defaults 0 0
 
-# firewall-cmd --permanent --add-service=mountd
+  # df -hT
+  # cd /nfsmnt
+  # ls
+  nfs.txt
+  # df -hT
 
-# firewall-cmd --reload
+However the firewall entry should be given. Because otherwise the external client will not get this service.
+firewall:
+  # firewall-cmd --permanent --add-service=nfs
+  # firewall-cmd --permanent --add-service=rpc-bind
+  # firewall-cmd --permanent --add-service=mountd
+  # firewall-cmd --reload
 
-# systemctl start nfs-server
+Service: 
+  # systemctl start nfs-server
+  # systemctl enable nfs-server
+  # systemctl status nfs-server
+  # systemctl start rpcbind
+  # systemctl enable rpcbind
 
-# systemctl enable nfs-server
 
-# systemctl status nfs-server
+______________________________________
+Client Configuration (192.168.122.21):
+______________________________________
 
-# systemctl start rpcbind
+# yum repolist all
+Configure YUM in RHEL 8:
+please configure the YUM local repository at first.
 
-# systemctl enable rpcbind
+install necessery tools:
+  # yum repolist all
+  # yum install nfs-utils
+  # yum install autofs -y
+  # systemctl stutus nfs-server autofs
+  # systemctl start nfs-server autofs
+  # systemctl enable nfs-server autofs
 
-------------------------------------------
-Client Configuration (192.168.1.110):
+create mount point first: 
+  # mkdir /nfsmnt
 
-# yum repolist
+you can appling three method,  
 
-# yum install autofs -y
+method_1:
+(manually mount)
+  # mount -t nfs 192.168.122.20:/nfs/share /nfsmnt
+  # df -hT
+  # cd /nfsmnt
+  # ls
+  nfs.txt
+  # df -hT
 
-# rpm -qi autofs
+or,
+method_2:
+(mount with fstab)
+  # vim /etc/fstab
+  192.168.122.20:/nfs/share /nfsmnt nfs defaults 0 0
 
-# mkdir /automount
+  # reboot or mount -a 
+  # df -hT
+  # cd /nfsmnt 
+  # ls
+  nfs.txt
+  # df -hT
 
-# mkdir -p /automount/private
+or,
+Method_3:
+(using autofs)
+  # vim /etc/auto.master.d/nfs.autofs
+    /- /etc/auto.master.d/usr
 
-# mkdir -p /automount/public
+  # vim /etc/auto.master.d/usr
+    /nfsrcv -fstype=nfs,rw,sync 192.168.122.20:/nfs/share
+    #or
+    /nfsrcv 192.168.122.20:/nfs/share
+  
+or,
+Method_3.1
+  # vim /etc/auto.master
+  /nfsrcv /etc/automount.txt  --timeout=60
 
-# vim /etc/auto.master
-/automount /etc/automount.txt  --timeout=60
+  # vim /etc/automount.txt
+  /nfs/share 192.168.122.20:/nfs/share
 
-# vim /etc/automount.txt
-public -ro,sync 192.168.1.109:/public
-private  -rw,sync  192.168.1.109:/private
-
-# systemctl start autofs
-
-# systemctl enable autofs
-
-# systemctl status autofs
-
-# systemctl start rpcbind
-
-# systemctl enable rpcbind
+  # systemctl start autofs
+  # systemctl enable autofs
+  # systemctl status autofs
+  # systemctl start rpcbind
+  # systemctl enable rpcbind
 
 ----------------------------------
-Test AutoFS: 
-
-Login on Client Machine and check the mount point details, here you won't see any NFS Share.
-
-# df -hT
-
-# cd /automount/
-
-# cd private
-
-Again Check the mount point details, here you will see the private NFS Share.
-# df -hT
-
-# cd .. ; cd public
-
-Again Check the mount point details, here you will see the public NFS Share.
-# df -hT
-
-Now go inside both the directories one by one & try to create and remove some files, here you will find that only RW filesystem allows you to do that not the RO Filesystem.
-
-Now come out of NFS Shares and wait for more than one min, again \ Check the mount point details, here you won't see any NFS Share.
-Beacuse both NFS shares got unmounted automatically themself due to AutoFS Service.
-
 You are done.
-
 ================
